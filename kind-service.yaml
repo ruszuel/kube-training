@@ -1,16 +1,14 @@
 apiVersion: v1 
 kind: Service 
 metadata:
-  name: my-svc
+  name: grafana-svc
   labels:
-    type: node
+    type: grafana
 spec:
-  type: NodePort
+  # type: NodePort
   selector:
-    app: nginx
+    app: grafana
   ports:
-  - name: http
-    protocol: TCP
-    port: 80
-    targetPort: 80
-    nodePort: 30081
+  - port: 80
+    targetPort: 3000
+    # nodePort: 30081

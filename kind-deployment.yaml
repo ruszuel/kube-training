@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment 
 metadata:
-  name: my-engine-deployment
+  name: grafana-deployment
   labels: 
-    app: nginx
+    app: grafana
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
-      app: nginx
+      app: grafana
   template:
     metadata:
       labels:
-        app: nginx
+        app: grafana
     spec:
       containers:
-        - name: nginx-pod
-          image: nginx:latest
+        - name: grafana
+          image: grafana/grafana
           resources:
             requests:
               cpu: 100m 
@@ -25,5 +25,4 @@ spec:
               cpu: 200m 
               memory: 500Mi
           ports:
-          - containerPort: 80
-          restartPolicy: Always
+          - containerPort: 3000

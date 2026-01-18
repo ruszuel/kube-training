@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: prom-to-gmr
+  namespace: default
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: mimirtool-load
+          image: grafana/mimirtool:latest
+          args:
+            - rules
+            - load
+            - /rules/prometheus-rules.yaml
+            - --address=http://172.18.0.2:30081/api/convert/
+            - --user=admin
+            - --key=prom-operator
+            - --id=1
+            - --extra-headers
+            - X-Grafana-Alerting-Datasource-UID=$(DATASOURCE_UID)
+            - --extra-headers
+            - X-Disable-Provenance=true
+            # - --extra-headers
+            # - X-Grafana-Alerting-Notification-Settings=$(NOTIFICATION_SETTINGS)
+          env:
+            - name: DATASOURCE_UID
+              value: "cfafzkmr6p9tsc" 
+            # - name: NOTIFICATION_SETTINGS
+            #   value: '{"receiver": "Alert Receiver"}'
+          volumeMounts:
+            - name: rules
+              mountPath: /rules
+              readOnly: true
+      volumes:
+        - name: rules
+          configMap:
+            name: prom-rules

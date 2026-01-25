@@ -1,0 +1,54 @@
+Installing VPA in a Cluster
+
+[Pre-req]
+- Metric-Server
+
+[CRD and VPA components Installation]
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/autoscaler/master/vertical-pod-autoscaler/deploy/vpa-v1-crd-gen.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/autoscaler/master/vertical-pod-autoscaler/deploy/vpa-rbac.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/autoscaler/master/vertical-pod-autoscaler/deploy/recommender-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/autoscaler/master/vertical-pod-autoscaler/deploy/updater-deployment.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/autoscaler/master/vertical-pod-autoscaler/deploy/admission-controller-deployment.yaml
+
+[Generate Certificates]
+
+[Generate CA]
+openssl genrsa -out ca.key 2048
+openssl req -x509 -new -nodes -key ca.key -subj "/CN=vpa-webhook.kube-system.svc" -days 365 -out caCert.pem
+
+[Generate Server Key]
+openssl genrsa -out serverKey.pem 2048
+
+[Generate Server CSR]
+openssl req -new -key serverKey.pem -subj "/CN=vpa-webhook.kube-system.svc" -out server.csr
+
+[Create a Confg]
+#csr.conf
+
+[req]
+req_extensions = v3_req
+distinguished_name = req_distinguished_name
+[req_distinguished_name]
+[v3_req]
+basicConstraints = CA:FALSE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+[alt_names]
+DNS.1 = vpa-webhook
+DNS.2 = vpa-webhook.kube-system
+DNS.3 = vpa-webhook.kube-system.svc
+
+[Sign the certificate]
+openssl x509 -req -in server.csr -CA caCert.pem -CAkey ca.key -CAcreateserial -out serverCert.pem -days 365 -extensions v3_req -extfile csr.conf
+
+[Create secret]
+kubectl create secret generic vpa-tls-certs \
+  --from-file=caCert.pem=caCert.pem \
+  --from-file=serverCert.pem=serverCert.pem \
+  --from-file=serverKey.pem=serverKey.pem \
+  -n kube-system
+
+[Clean Up]
+rm ca.key caCert.pem caCert.srl serverKey.pem server.csr serverCert.pem csr.conf
+

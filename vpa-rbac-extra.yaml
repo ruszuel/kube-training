@@ -1,6 +1,3 @@
-helm repo add autoscalers https://kubernetes.github.io/autoscaler
-
-[Create RBAC for admission Controller]
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -36,42 +33,3 @@ subjects:
   - kind: ServiceAccount
     name: vertical-pod-autoscaler-admission-controller
     namespace: kube-system
-
-[Download the values.yaml, then update the following]
- tls:
-    # If true, Helm will generate the TLS secret using genCA/genSignedCert
-    create: true
-    # Name of the TLS secret
-    secretName: vpa-tls-certs
-    caCert: ""
-    cert: ""
-    key: ""
-
-  volumes:
-    - name: tls-certs
-      secret:
-        defaultMode: 420
-        secretName: vpa-tls-certs
-        items:
-          - key: ca.crt
-            path: caCert.pem
-          - key: tls.crt
-            path: serverCert.pem
-          - key: tls.key
-            path: serverKey.pem
-
-[Install the repo using the updated values.yaml]
-helm upgrade -i vertical-pod-autoscaler autoscalers/vertical-pod-autoscaler -f values.yaml -n kube-system
-
-[Uninstalling VPA]
-helm uninstall vertical-pod-autoscaler -n kube-system
-
-kubectl delete mutatingwebhookconfigurations vpa-webhook-config
-
-
-
-[Third party Installation]
-https://artifacthub.io/packages/helm/cowboysysop/vertical-pod-autoscaler
-
-
-
